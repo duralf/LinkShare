@@ -6,15 +6,12 @@
 #include <signal.h>
 #include <errno.h>
 #include <math.h>
+#include <string.h>
+#include <stdio.h>
 
 #define LISTEN_PORT 31235
 
 int terminate = 0;
-
-static int min(int a, int b)
-{
-	return (a < b)? a: b;
-}
 
 void sighandler(int signal)
 {
@@ -63,9 +60,9 @@ int listen_tcp()
 			close(clientfd);
 			continue;
 		}
-		if( strncmp(buffer, "HELO", min(4, n)) )
+		if( strncmp(buffer, "HELO", 4) )
 			puts("HELO!\n");
-		else if(strncmp(buffer, "SHOW", min(4, n)) )
+		else if(strncmp(buffer, "SHOW", 4) )
 			puts("Not implemented yet :(\n");
 		close(clientfd);
 		
