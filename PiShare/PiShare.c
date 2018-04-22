@@ -23,10 +23,41 @@ void sighandler(int signal)
 int listen_udp()
 {
 	char buffer[256];
-	int sockfd;
-	sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+	int sockfd, clientfd;
+	sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	if( sockfd < 0 )
 		return -1;
+	struct sockaddr_in server, client;
+	server.sin_family = AF_INET;
+	server.sin_addr.s_addr = INADDR_ANY;
+	server.sin_port = LISTEN_PORT;
+	if( bind(sockfd, (struct sockaddr*)&server, sizeof(server)) < 0 ) {
+		perror("");
+		return -2;
+	}
+	while( !terminate )
+	{
+		struct sockaddr_in client;
+		ssize_t n;
+		socklen_t addrlen = sizeof(client);
+		n = recvfrom(sockfd, buffer, 255, 0, (struct sockaddr*)&client, &addrlen);
+		puts("receivvved package!");		
+		//n = read(clientfd, buffer, 255);
+		if( n < 0 ) {
+			close(clientfd);
+			continue;
+		}
+		if( strncmp(buffer, "HELO", 4) ) {
+#ifdef _DEBUG
+			puts("sending HELO!");		
+#endif
+			send(clientfd, "HELO!", 6, 0);
+		}
+		else
+			puts("Not implemented yet :(\n");
+		close(clientfd);
+		
+	}
 	close(sockfd);
 
 	return 0;
@@ -37,6 +68,9 @@ int listen_tcp()
 	char buffer[256];
 	int sockfd, clientfd;
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	if( sockfd < 0 )
+		return -11;
+
 	
 	struct sockaddr_in server, client;
 	server.sin_family = AF_INET;
@@ -44,7 +78,7 @@ int listen_tcp()
 	server.sin_port = LISTEN_PORT;
 	if( bind(sockfd, (struct sockaddr*)&server, sizeof(server)) < 0 ) {
 		perror("");
-		return -11;
+		return -12;
 	}
 	listen(sockfd, 5);
 	while( !terminate )
@@ -54,7 +88,7 @@ int listen_tcp()
 		socklen_t addrlen = sizeof(client);
 		clientfd = accept(sockfd, (struct sockaddr*) &client, &addrlen);
 		if( clientfd < 0 )
-			return -12;
+			return -13;
 		n = read(clientfd, buffer, 255);
 		if( n < 0 ) {
 			close(clientfd);
